@@ -1,20 +1,30 @@
-from fastapi import FastAPI
 import pandas as pd
-import datetime
 import numpy as np
+from fastapi import FastAPI
+import iso639
+import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import iso639
 
 
 # Crear una instancia de la aplicación
 app = FastAPI()
-
 # Cargamos el dataframe
 movies = pd.read_csv('Dataset/Movies_Credits_Merged.csv')
 
+
+
 @app.get('/peliculas_idioma/{idioma}')
-def peliculas_idioma(idioma:str):
+def peliculas_idioma(idioma: str):
+    """
+    Obtiene la cantidad de películas disponibles en un idioma específico.
+
+    Parameters:
+        - idioma (str): Idioma para el cual se desea obtener la información.
+    Returns:
+        - dict: Un diccionario que contiene el idioma y la cantidad de películas disponibles.
+                En caso de que no se encuentre información para el idioma, se retorna un mensaje de error.
+    """
     idioma_nombre = None
     try:
         codigo_iso639 = iso639.to_iso639_1(idioma.lower())
@@ -22,11 +32,25 @@ def peliculas_idioma(idioma:str):
     except ValueError:
         return f"No se encontró información para el idioma {idioma}"
 
+    # Filtrar las películas por el código ISO del idioma
     cantidad_peliculas = len(movies[movies['original_language'] == codigo_iso639])
-    return {'idioma':idioma, 'cantidad':cantidad_peliculas}
+
+    return {'idioma': idioma, 'cantidad': cantidad_peliculas}
+
+
 
 @app.get('/peliculas_duracion/{pelicula}')
-def peliculas_duracion(pelicula:str):
+def peliculas_duracion(pelicula: str):
+    """
+    Obtiene la duración y el año de una película específica.
+
+    Parameters:
+        - pelicula (str): Nombre de la película para la cual se desea obtener la información.
+
+    Returns:
+        - dict: Un diccionario que contiene el nombre de la película, su duración y su año de lanzamiento.
+                En caso de que no se encuentre información para la película, se retorna un mensaje de error.
+    """
     # Filtra el DataFrame por la película ingresada
     pelicula_filtrada = movies[movies['title'] == pelicula]
 
@@ -39,12 +63,25 @@ def peliculas_duracion(pelicula:str):
     anio = pelicula_filtrada['release_year'].values[0]
 
     # Devuelve la duración y el año de la película
-    return {'pelicula':pelicula, 'duracion':duracion, 'anio':anio}
+    return {'pelicula': pelicula, 'duracion': duracion, 'anio': anio}
+
 
 
 
 @app.get('/franquicia/{franquicia}')
-def franquicia(franquicia:str):
+def franquicia(franquicia: str):
+    """
+    Obtiene información sobre una franquicia específica, incluyendo la cantidad de películas,
+    la ganancia total y la ganancia promedio de la franquicia.
+
+    Parameters:
+        - franquicia (str): Nombre de la franquicia para la cual se desea obtener la información.
+
+    Returns:
+        - dict: Un diccionario que contiene el nombre de la franquicia, la cantidad de películas,
+                la ganancia total y la ganancia promedio. En caso de no encontrar información para la franquicia,
+                se retorna un mensaje de error.
+    """
     # Filtra el DataFrame por la franquicia ingresada
     franquicia_filtrada = movies[movies['name_to_collection'] == franquicia]
 
@@ -58,35 +95,71 @@ def franquicia(franquicia:str):
     # Calcula la ganancia total y promedio de la franquicia
     ganancia_total = franquicia_filtrada['revenue'].sum()
     ganancia_promedio = franquicia_filtrada['revenue'].mean()
-    # Devuelve la información de la franquicia
-    return {'franquicia':franquicia, 'cantidad':cantidad_peliculas, 'ganancia_total':ganancia_total, 'ganancia_promedio':ganancia_promedio}
 
-@app.get('/peliculas_pais/{pais}')
-def peliculas_pais(pais:str):
-    cantidad_peliculas = movies[movies['pais_produccion'].apply(lambda x: pais in x)].shape[0]
-    if cantidad_peliculas == 0:
-        return f"No se encontraron películas producidas en el país {pais}."
-    else:
-        return {'pais':pais, 'cantidad':cantidad_peliculas}
+    # Devuelve la información de la franquicia
+    return {'franquicia': franquicia, 'cantidad': cantidad_peliculas, 'ganancia_total': ganancia_total, 'ganancia_promedio': ganancia_promedio}
+
+
+
+
 
 @app.get('/productoras_exitosas/{productora}')
-def productoras_exitosas(productora:str):
+def productoras_exitosas(productora: str):
+    """
+    Obtiene información sobre una productora específica, incluyendo el total de ingresos generados
+    por sus películas y la cantidad de películas producidas por la productora.
+
+    Parameters:
+        - productora (str): Nombre de la productora para la cual se desea obtener la información.
+
+    Returns:
+        - dict: Un diccionario que contiene el nombre de la productora, el total de ingresos generados
+                por sus películas y la cantidad de películas producidas por la productora. En caso de no encontrar
+                películas para la productora, se retorna un mensaje de error.
+    """
+    # Filtra el DataFrame por la productora ingresada
     productora_films = movies[movies['nombre_compania'].apply(lambda x: productora in x)]
+
     if productora_films.empty:
         return f"No se encontraron películas para la productora {productora}."
     else:
+        # Calcula el total de ingresos generados por las películas de la productora
         total_revenue = productora_films['revenue'].sum()
+
+        # Calcula la cantidad de películas producidas por la productora
         cantidad_peliculas = len(productora_films)
-        return {'productora':productora, 'revenue_total': total_revenue,'cantidad':cantidad_peliculas}
+
+        # Devuelve la información de la productora
+        return {'productora': productora, 'revenue_total': total_revenue, 'cantidad': cantidad_peliculas}
+
+
+
 
 
 @app.get('/get_director/{nombre_director}')
-def get_director(nombre_director:str):
+def get_director(nombre_director: str):
+    """
+    Obtiene información sobre un director específico, incluyendo el promedio de éxito de sus películas
+    y una lista de las películas que ha dirigido.
+
+    Parameters:
+        - nombre_director (str): Nombre del director para el cual se desea obtener la información.
+
+    Returns:
+        - dict: Un diccionario que contiene el promedio de éxito de las películas del director
+                y una lista de las películas que ha dirigido. En caso de no encontrar películas para el director,
+                se retorna un mensaje de error.
+    """
+    # Filtra el DataFrame por el nombre del director ingresado
     director_films = movies[movies['name_director'] == nombre_director]
+
     if director_films.empty:
         return f"No se encontraron películas para el director {nombre_director}."
     else:
+        # Calcula el promedio de éxito de las películas del director
         director_success = director_films['return'].mean()
+
+        # Crea una lista de películas dirigidas por el director
         movie_list = []
         for _, row in director_films.iterrows():
             movie_info = {
@@ -97,11 +170,24 @@ def get_director(nombre_director:str):
                 'revenue': row['revenue']
             }
             movie_list.append(movie_info)
-    return {'director_success' : director_success, 'lista_peliculas': movie_list}
 
-# ML
+    return {'director_success': director_success, 'lista_peliculas': movie_list}
+
+
+
+
 @app.get('/recomendacion/{titulo}')
 def recomendacion(titulo: str):
+    """
+    Obtiene una lista de recomendaciones de películas similares a una película dada.
+
+    Parameters:
+        - titulo (str): Título de la película para la cual se desea obtener recomendaciones.
+
+    Returns:
+        - dict: Un diccionario que contiene una lista de títulos de películas recomendadas similares
+                a la película dada.
+    """
     # Obtener la fila correspondiente al título de la película ingresada
     pelicula = movies[movies['title'] == titulo]
 
@@ -126,4 +212,4 @@ def recomendacion(titulo: str):
     # Obtener los títulos de las 5 películas más similares
     peliculas_similares = movies.iloc[indices_similares][:5]['title'].tolist()
 
-    return {'lista recomendada': peliculas_similares}
+    return {'lista_recomendada': peliculas_similares}
