@@ -1,20 +1,129 @@
-import pandas as pd
 from fastapi import FastAPI
+import pandas as pd
+import datetime
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import iso639
+
+
+# Crear una instancia de la aplicación
+app = FastAPI()
+
+# Cargamos el dataframe
+movies = pd.read_csv('Dataset/Movies_Credits_Merged.csv')
+
+@app.get('/peliculas_idioma/{idioma}')
+def peliculas_idioma(idioma:str):
+    idioma_nombre = None
+    try:
+        codigo_iso639 = iso639.to_iso639_1(idioma.lower())
+        idioma_nombre = iso639.to_name(codigo_iso639)
+    except ValueError:
+        return f"No se encontró información para el idioma {idioma}"
+
+    cantidad_peliculas = len(movies[movies['original_language'] == codigo_iso639])
+    return {'idioma':idioma, 'cantidad':cantidad_peliculas}
+
+@app.get('/peliculas_duracion/{pelicula}')
+def peliculas_duracion(pelicula:str):
+    # Filtra el DataFrame por la película ingresada
+    pelicula_filtrada = movies[movies['title'] == pelicula]
+
+    # Verifica si se encontró la película
+    if pelicula_filtrada.empty:
+        return f"No se encontró información para la película '{pelicula}'."
+
+    # Obtiene la duración y el año de la película
+    duracion = pelicula_filtrada['runtime'].values[0]
+    anio = pelicula_filtrada['release_year'].values[0]
+
+    # Devuelve la duración y el año de la película
+    return {'pelicula':pelicula, 'duracion':duracion, 'anio':anio}
 
 
 
-def peliculas_idioma( Idioma: str ):
+@app.get('/franquicia/{franquicia}')
+def franquicia(franquicia:str):
+    # Filtra el DataFrame por la franquicia ingresada
+    franquicia_filtrada = movies[movies['name_to_collection'] == franquicia]
 
-# def peliculas_duracion( Pelicula: str ): Se ingresa una pelicula. Debe devolver la la duracion y el año.
-#                     Ejemplo de retorno: X . Duración: x. Año: xx
+    # Verifica si se encontró la franquicia
+    if franquicia_filtrada.empty:
+        return f"No se encontró información para la franquicia '{franquicia}'."
 
-# def franquicia( Franquicia: str ): Se ingresa la franquicia, retornando la cantidad de peliculas, ganancia total y promedio
-#                     Ejemplo de retorno: La franquicia X posee X peliculas, una ganancia total de x y una ganancia promedio de xx
+    # Calcula la cantidad de películas de la franquicia
+    cantidad_peliculas = len(franquicia_filtrada)
 
-# def peliculas_pais( Pais: str ): Se ingresa un país (como están escritos en el dataset, no hay que traducirlos!), retornando la cantidad de peliculas producidas en el mismo.
-#                     Ejemplo de retorno: Se produjeron X películas en el país X
+    # Calcula la ganancia total y promedio de la franquicia
+    ganancia_total = franquicia_filtrada['revenue'].sum()
+    ganancia_promedio = franquicia_filtrada['revenue'].mean()
+    # Devuelve la información de la franquicia
+    return {'franquicia':franquicia, 'cantidad':cantidad_peliculas, 'ganancia_total':ganancia_total, 'ganancia_promedio':ganancia_promedio}
 
-# def productoras_exitosas( Productora: str ): Se ingresa la productora, entregandote el revunue total y la cantidad de peliculas que realizo.
-#                     Ejemplo de retorno: La productora X ha tenido un revenue de x
+@app.get('/peliculas_pais/{pais}')
+def peliculas_pais(pais:str):
+    cantidad_peliculas = df[df['pais_produccion'].apply(lambda x: pais in x)].shape[0]
+    if cantidad_peliculas == 0:
+        return f"No se encontraron películas producidas en el país {pais}."
+    else:
+        return {'pais':pais, 'cantidad':cantidad_peliculas}
 
-# def get_director( nombre_director ): Se ingresa el nombre de un director que se encuentre dentro de un dataset debiendo devolver el éxito del mismo medido a través del retorno. Además, deberá devolver el nombre de cada película con la fecha de lanzamiento, retorno individual, costo y ganancia de la misma, en formato lista.
+@app.get('/productoras_exitosas/{productora}')
+def productoras_exitosas(productora:str):
+    productora_films = movies[movies['nombre_compania'].apply(lambda x: productora in x)]
+    if productora_films.empty:
+        return f"No se encontraron películas para la productora {productora}."
+    else:
+        total_revenue = productora_films['revenue'].sum()
+        cantidad_peliculas = len(productora_films)
+        return {'productora':productora, 'revenue_total': total_revenue,'cantidad':cantidad_peliculas}
+
+
+@app.get('/get_director/{nombre_director}')
+def get_director(nombre_director:str):
+    director_films = movies[movies['name_director'] == nombre_director]
+    if director_films.empty:
+        return f"No se encontraron películas para el director {nombre_director}."
+    else:
+        director_success = director_films['return'].mean()
+        movie_list = []
+        for _, row in director_films.iterrows():
+            movie_info = {
+                'title': row['title'],
+                'release_date': row['release_date'],
+                'return': row['return'],
+                'budget': row['budget'],
+                'revenue': row['revenue']
+            }
+            movie_list.append(movie_info)
+    return {'director_success' : director_success, 'lista_peliculas': movie_list}
+
+# ML
+@app.get('/recomendacion/{titulo}')
+def recomendacion(titulo: str):
+    # Obtener la fila correspondiente al título de la película ingresada
+    pelicula = movies[movies['title'] == titulo]
+
+    # Obtener las características de género de la película de interés
+    generos_pelicula = pelicula['name_genres'].iloc[0].split(',')
+
+    # Obtener la matriz de características de género de todas las películas
+    generos = movies['name_genres'].str.get_dummies(',')
+
+    # Obtener la matriz de puntuaciones de todas las películas
+    puntuaciones = movies[['vote_average', 'vote_count']].values
+
+    # Combinar las matrices de género y puntuaciones
+    caracteristicas = pd.concat([generos, pd.DataFrame(puntuaciones, columns=['vote_average', 'vote_count'])], axis=1)
+
+    # Calcular la similitud de coseno entre la película ingresada y todas las demás películas basada en características
+    similitudes = cosine_similarity(caracteristicas.loc[pelicula.index], caracteristicas)
+
+    # Obtener los índices de las películas más similares (excluyendo la película ingresada)
+    indices_similares = similitudes.argsort()[0][::-1][1:]
+
+    # Obtener los títulos de las 5 películas más similares
+    peliculas_similares = movies.iloc[indices_similares][:5]['title'].tolist()
+
+    return {'lista recomendada': peliculas_similares}
