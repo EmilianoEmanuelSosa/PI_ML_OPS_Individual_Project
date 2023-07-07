@@ -213,3 +213,5 @@ def recomendacion(titulo: str):
     peliculas_similares = movies.iloc[indices_similares][:5]['title'].tolist()
 
     return {'lista_recomendada': peliculas_similares}
+
+recomendacion('Jumanji')
