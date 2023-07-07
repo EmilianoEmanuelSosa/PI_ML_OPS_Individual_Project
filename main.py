@@ -33,7 +33,7 @@ def peliculas_idioma(idioma: str):
         return f"No se encontró información para el idioma {idioma}"
 
     # Filtrar las películas por el código ISO del idioma
-    cantidad_peliculas = len(movies[movies['original_language'] == codigo_iso639])
+    cantidad_peliculas = len(movies[movies['title'] == codigo_iso639])
 
     return {'idioma': idioma, 'cantidad': cantidad_peliculas}
 
@@ -83,7 +83,7 @@ def franquicia(franquicia: str):
                 se retorna un mensaje de error.
     """
     # Filtra el DataFrame por la franquicia ingresada
-    franquicia_filtrada = movies[movies['name_to_collection'] == franquicia]
+    franquicia_filtrada = movies[movies['belongs_to_collection'][2][0] == franquicia]
 
     # Verifica si se encontró la franquicia
     if franquicia_filtrada.empty:
@@ -118,7 +118,7 @@ def productoras_exitosas(productora: str):
                 películas para la productora, se retorna un mensaje de error.
     """
     # Filtra el DataFrame por la productora ingresada
-    productora_films = movies[movies['nombre_compania'].apply(lambda x: productora in x)]
+    productora_films = movies[movies['production_companies'].apply(lambda x: productora in x)]
 
     if productora_films.empty:
         return f"No se encontraron películas para la productora {productora}."
@@ -151,7 +151,7 @@ def get_director(nombre_director: str):
                 se retorna un mensaje de error.
     """
     # Filtra el DataFrame por el nombre del director ingresado
-    director_films = movies[movies['name_director'] == nombre_director]
+    director_films = movies[movies['director'] == nombre_director]
 
     if director_films.empty:
         return f"No se encontraron películas para el director {nombre_director}."
@@ -192,10 +192,10 @@ def recomendacion(titulo: str):
     pelicula = movies[movies['title'] == titulo]
 
     # Obtener las características de género de la película de interés
-    generos_pelicula = pelicula['name_genres'].iloc[0].split(',')
+    generos_pelicula = pelicula['name_genre'].iloc[0].split(',')
 
     # Obtener la matriz de características de género de todas las películas
-    generos = movies['name_genres'].str.get_dummies(',')
+    generos = movies['name_genre'].str.get_dummies(',')
 
     # Obtener la matriz de puntuaciones de todas las películas
     puntuaciones = movies[['vote_average', 'vote_count']].values
