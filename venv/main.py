@@ -10,7 +10,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 # Crear una instancia de la aplicación
 app = FastAPI()
 # Cargamos el dataframe
-movies = pd.read_csv('Dataset/Movies_Credits_Merged.csv')
+movies = pd.read_csv('../Dataset/Movies_Credits_Merged.csv')
 
 
 
