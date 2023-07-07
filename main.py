@@ -63,7 +63,7 @@ def franquicia(franquicia:str):
 
 @app.get('/peliculas_pais/{pais}')
 def peliculas_pais(pais:str):
-    cantidad_peliculas = df[df['pais_produccion'].apply(lambda x: pais in x)].shape[0]
+    cantidad_peliculas = movies[movies['pais_produccion'].apply(lambda x: pais in x)].shape[0]
     if cantidad_peliculas == 0:
         return f"No se encontraron películas producidas en el país {pais}."
     else:
