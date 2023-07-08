@@ -5,7 +5,7 @@ import iso639
 import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-
+import re
 
 # Crear una instancia de la aplicación
 app = FastAPI()
@@ -83,8 +83,11 @@ def franquicia(franquicia: str):
                 la ganancia total y la ganancia promedio. En caso de no encontrar información para la franquicia,
                 se retorna un mensaje de error.
     """
+    # Limpia los valores NaN en la columna "Collections"
+    movies_cleaned = movies.dropna(subset=['Collections'])
+
     # Filtra el DataFrame por la franquicia ingresada
-    franquicia_filtrada = movies[movies['production_companies'].apply(lambda x: franquicia in x)]
+    franquicia_filtrada = movies_cleaned[movies_cleaned['Collections'].str.contains(franquicia, flags=re.IGNORECASE)]
 
     # Verifica si se encontró la franquicia
     if franquicia_filtrada.empty:
@@ -179,8 +182,7 @@ def recomendacion(titulo: str):
     pelicula = movies[movies['title'].str.lower().str.strip() == titulo]
 
     if pelicula.empty:
-        # Verificar si el título es una subcadena de algún título en el dataframe movies
-        pelicula = movies[movies['title'].str.lower().str.contains(titulo)]
+        return f"No se encontró información para la película '{titulo}'."
 
     # Obtener las características de género de la película de interés
     generos_pelicula = pelicula['name_genre'].iloc[0].split(',')
@@ -204,3 +206,5 @@ def recomendacion(titulo: str):
     peliculas_similares = movies.iloc[indices_similares][:5]['title'].tolist()
 
     return {'lista_recomendada': peliculas_similares}
+
+print(recomendacion('The Dark Knight'))
