@@ -138,26 +138,18 @@ def productoras_exitosas(productora: str):
 
 @app.get('/get_director/{nombre_director}')
 def get_director(nombre_director: str):
-    """
-    Obtiene información sobre un director específico, incluyendo el promedio de éxito de sus películas
-    y una lista de las películas que ha dirigido.
 
-    Parameters:
-        - nombre_director (str): Nombre del director para el cual se desea obtener la información.
-
-    Returns:
-        - dict: Un diccionario que contiene el promedio de éxito de las películas del director
-                y una lista de las películas que ha dirigido. En caso de no encontrar películas para el director,
-                se retorna un mensaje de error.
-    """
     # Filtra el DataFrame por el nombre del director ingresado
     director_films = movies[movies['director'] == nombre_director]
 
     if director_films.empty:
         return f"No se encontraron películas para el director {nombre_director}."
 
-    # Calcula el promedio de éxito de las películas del director
-    director_success = director_films['return'].mean()
+    # Limpia los valores 'N/A' y reemplaza los valores 'inf' y 'nan' en el DataFrame
+    director_films = director_films.replace({'N/A': np.nan, np.inf: np.nan})
+
+    # Calcula el promedio de éxito de las películas del director sin considerar los valores NaN
+    director_success = director_films['return'].mean(skipna=True)
 
     # Crea una lista de películas dirigidas por el director
     movie_list = director_films[['title', 'release_date', 'return', 'budget', 'revenue']].to_dict(orient='records')
@@ -166,6 +158,7 @@ def get_director(nombre_director: str):
 
 
 
+print(get_director('Rob Reiner'))
 
 @app.get('/recomendacion/{titulo}')
 def recomendacion(titulo: str):
