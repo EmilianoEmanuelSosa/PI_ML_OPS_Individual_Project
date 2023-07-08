@@ -34,10 +34,9 @@ def peliculas_idioma(idioma: str):
         return f"No se encontró información para el idioma {idioma}"
 
     # Filtrar las películas por el código ISO del idioma
-    cantidad_peliculas = len(movies[movies['title'] == codigo_iso639])
+    cantidad_peliculas = len(movies[movies['original_language'] == codigo_iso639])
 
     return {'idioma': idioma, 'cantidad': cantidad_peliculas}
-
 
 
 
