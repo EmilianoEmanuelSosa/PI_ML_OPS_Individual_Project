@@ -14,6 +14,7 @@ movies = pd.read_csv('Dataset_Api_Web/Movies_Credits_Merged.csv')
 
 
 
+
 @app.get('/peliculas_idioma/{idioma}')
 def peliculas_idioma(idioma: str):
     """
@@ -39,6 +40,7 @@ def peliculas_idioma(idioma: str):
 
 
 
+
 @app.get('/peliculas_duracion/{pelicula}')
 def peliculas_duracion(pelicula: str):
     """
@@ -59,14 +61,14 @@ def peliculas_duracion(pelicula: str):
         return f"No se encontró información para la película '{pelicula}'."
 
     # Obtiene la duración y el año de la película
-    duracion = pelicula_filtrada['runtime'].values[0]
-    anio = pelicula_filtrada['release_year'].values[0]
+    duracion = pelicula_filtrada['runtime'].values[0].item()
+    anio = pelicula_filtrada['release_year'].values[0].item()
 
     # Devuelve la duración y el año de la película
     return {'pelicula': pelicula, 'duracion': duracion, 'anio': anio}
 
 
-print(peliculas_duracion('Toy Story'))
+
 
 @app.get('/franquicia/{franquicia}')
 def franquicia(franquicia: str):
@@ -127,7 +129,7 @@ def productoras_exitosas(productora: str):
         total_revenue = productora_films['revenue'].sum()
 
         # Calcula la cantidad de películas producidas por la productora
-        cantidad_peliculas = len(productora_films)
+        cantidad_peliculas = len(productora_films),'peliculas'
 
         # Devuelve la información de la productora
         return {'productora': productora, 'revenue_total': total_revenue, 'cantidad': cantidad_peliculas}
@@ -155,21 +157,12 @@ def get_director(nombre_director: str):
 
     if director_films.empty:
         return f"No se encontraron películas para el director {nombre_director}."
-    else:
-        # Calcula el promedio de éxito de las películas del director
-        director_success = director_films['return'].mean()
 
-        # Crea una lista de películas dirigidas por el director
-        movie_list = []
-        for _, row in director_films.iterrows():
-            movie_info = {
-                'title': row['title'],
-                'release_date': row['release_date'],
-                'return': row['return'],
-                'budget': row['budget'],
-                'revenue': row['revenue']
-            }
-            movie_list.append(movie_info)
+    # Calcula el promedio de éxito de las películas del director
+    director_success = director_films['return'].mean()
+
+    # Crea una lista de películas dirigidas por el director
+    movie_list = director_films[['title', 'release_date', 'return', 'budget', 'revenue']].to_dict(orient='records')
 
     return {'director_success': director_success, 'lista_peliculas': movie_list}
 
@@ -188,8 +181,15 @@ def recomendacion(titulo: str):
         - dict: Un diccionario que contiene una lista de títulos de películas recomendadas similares
                 a la película dada.
     """
-    # Obtener la fila correspondiente al título de la película ingresada
-    pelicula = movies[movies['title'] == titulo]
+    # Convertir el título ingresado a minúsculas y eliminar espacios adicionales
+    titulo = titulo.lower().strip()
+
+    # Verificar si el título está en la columna 'title' del dataframe movies
+    pelicula = movies[movies['title'].str.lower().str.strip() == titulo]
+
+    if pelicula.empty:
+        # Verificar si el título es una subcadena de algún título en el dataframe movies
+        pelicula = movies[movies['title'].str.lower().str.contains(titulo)]
 
     # Obtener las características de género de la película de interés
     generos_pelicula = pelicula['name_genre'].iloc[0].split(',')
