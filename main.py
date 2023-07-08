@@ -84,7 +84,7 @@ def franquicia(franquicia: str):
                 se retorna un mensaje de error.
     """
     # Filtra el DataFrame por la franquicia ingresada
-    franquicia_filtrada = movies[movies['belongs_to_collection'][2][0] == franquicia]
+    franquicia_filtrada = movies[movies['production_companies'].apply(lambda x: franquicia in x)]
 
     # Verifica si se encontró la franquicia
     if franquicia_filtrada.empty:
@@ -99,7 +99,6 @@ def franquicia(franquicia: str):
 
     # Devuelve la información de la franquicia
     return {'franquicia': franquicia, 'cantidad': cantidad_peliculas, 'ganancia_total': ganancia_total, 'ganancia_promedio': ganancia_promedio}
-
 
 
 
