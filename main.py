@@ -83,11 +83,18 @@ def franquicia(franquicia: str):
                 la ganancia total y la ganancia promedio. En caso de no encontrar información para la franquicia,
                 se retorna un mensaje de error.
     """
+    # Validar que el parámetro franquicia no esté vacío
+    if not franquicia:
+        return "El parámetro franquicia no puede estar vacío."
+
+    # Convertir el nombre de la franquicia a minúsculas y eliminar espacios en blanco al principio y al final
+    franquicia = franquicia.lower().strip()
+
     # Limpia los valores NaN en la columna "Collections"
     movies_cleaned = movies.dropna(subset=['Collections'])
 
-    # Filtra el DataFrame por la franquicia ingresada
-    franquicia_filtrada = movies_cleaned[movies_cleaned['Collections'].str.contains(franquicia, flags=re.IGNORECASE)]
+    # Filtra el DataFrame por la franquicia ingresada (en minúsculas)
+    franquicia_filtrada = movies_cleaned[movies_cleaned['Collections'].str.lower().str.contains(franquicia, flags=re.IGNORECASE)]
 
     # Verifica si se encontró la franquicia
     if franquicia_filtrada.empty:
@@ -106,6 +113,7 @@ def franquicia(franquicia: str):
 
 
 
+
 @app.get('/productoras_exitosas/{productora}')
 def productoras_exitosas(productora: str):
     """
@@ -120,8 +128,15 @@ def productoras_exitosas(productora: str):
                 por sus películas y la cantidad de películas producidas por la productora. En caso de no encontrar
                 películas para la productora, se retorna un mensaje de error.
     """
-    # Filtra el DataFrame por la productora ingresada
-    productora_films = movies[movies['production_companies'].apply(lambda x: productora in x)]
+    # Validar que el parámetro productora no esté vacío
+    if not productora:
+        return "El parámetro productora no puede estar vacío."
+
+    # Eliminar espacios en blanco al principio y al final del nombre de la productora
+    productora = productora.strip()
+
+    # Filtra el DataFrame por la productora ingresada (ignorando mayúsculas y minúsculas)
+    productora_films = movies[movies['production_companies'].apply(lambda x: productora.lower() in x.lower())]
 
     if productora_films.empty:
         return f"No se encontraron películas para la productora {productora}."
@@ -130,7 +145,7 @@ def productoras_exitosas(productora: str):
         total_revenue = productora_films['revenue'].sum()
 
         # Calcula la cantidad de películas producidas por la productora
-        cantidad_peliculas = len(productora_films),'peliculas'
+        cantidad_peliculas = len(productora_films)
 
         # Devuelve la información de la productora
         return {'productora': productora, 'revenue_total': total_revenue, 'cantidad': cantidad_peliculas}
@@ -138,10 +153,71 @@ def productoras_exitosas(productora: str):
 
 
 
+
+
+@app.get('/peliculas_pais/{Pais}')
+def peliculas_pais(Pais: str):
+    """
+    Obtiene la cantidad de películas producidas en un país específico.
+
+    Parameters:
+        - Pais (str): Nombre del país del cual se desea obtener la cantidad de películas producidas.
+
+    Returns:
+        - str: Un mensaje que indica la cantidad de películas producidas en el país especificado.
+
+    Explanation:
+        Esta función recibe como parámetro el nombre de un país y realiza un filtrado en el DataFrame para obtener
+        las películas que se han producido en ese país. Luego, se cuenta la cantidad de películas obtenidas y se
+        retorna un mensaje que indica dicha cantidad junto con el nombre del país.
+
+        Por ejemplo, si se ingresa el país 'Estados Unidos', la función retornará el mensaje:
+        "Se produjeron X películas en el país Estados Unidos."
+    """
+    # Aplica lower() y strip() al país ingresado
+    pais_limpiado = Pais.lower().strip()
+
+    # Filtra el DataFrame por el país ingresado
+    peliculas_por_pais = movies[movies['production_countries'].str.contains(pais_limpiado, case=False)]
+
+    # Obtiene la cantidad de películas producidas en el país
+    cantidad_peliculas = len(peliculas_por_pais)
+
+    return f"Se produjeron {cantidad_peliculas} películas en el país {Pais}."
+
+
+
+
 @app.get('/get_director/{nombre_director}')
 def get_director(nombre_director: str):
-    # Filtra el DataFrame por el nombre del director ingresado
-    director_films = movies[movies['director'] == nombre_director]
+    """
+    Obtiene información sobre un director y sus películas.
+
+    Parameters:
+        - nombre_director (str): Nombre del director del cual se desea obtener información.
+
+    Returns:
+        - dict: Un diccionario que contiene el promedio de éxito del director y una lista de películas
+                dirigidas por el director.
+
+    Explanation:
+        Esta función recibe como parámetro el nombre de un director y realiza un filtrado en el DataFrame para
+        obtener las películas dirigidas por ese director. Luego, se calcula el promedio de éxito de las películas
+        (considerando la columna 'return') y se limita la cantidad de películas a devolver. Finalmente, se retorna
+        un diccionario que contiene el promedio de éxito del director y una lista de las películas dirigidas por él.
+
+        Si no se encuentran películas para el director especificado, se retornará el mensaje:
+        "No se encontraron películas para el director {nombre_director}."
+    """
+    # Validar que el parámetro nombre_director no esté vacío
+    if not nombre_director:
+        return "El parámetro nombre_director no puede estar vacío."
+
+    # Eliminar espacios en blanco al principio y al final del nombre del director
+    nombre_director = nombre_director.strip()
+
+    # Filtra el DataFrame por el nombre del director ingresado (ignorando mayúsculas y minúsculas)
+    director_films = movies[movies['director'].str.lower().str.strip() == nombre_director.lower().strip()]
 
     if director_films.empty:
         return f"No se encontraron películas para el director {nombre_director}."
@@ -160,6 +236,8 @@ def get_director(nombre_director: str):
     movie_list = director_films[['title', 'release_date', 'return', 'budget', 'revenue']].to_dict(orient='records')
 
     return {'director_success': director_success, 'lista_peliculas': movie_list}
+
+
 
 
 
