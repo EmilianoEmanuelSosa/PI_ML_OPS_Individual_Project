@@ -21,7 +21,7 @@ def peliculas_idioma(idioma: str):
     Obtiene la cantidad de películas disponibles en un idioma específico.
 
     Parameters:
-        - idioma (str): Idioma para el cual se desea obtener la información.
+        - idioma (str): Idioma para el cual se desea obtener la información.Se debe ingresar el codigo del pais: por ejemplo "en" de English.
     Returns:
         - dict: Un diccionario que contiene el idioma y la cantidad de películas disponibles.
                 En caso de que no se encuentre información para el idioma, se retorna un mensaje de error.
