@@ -185,6 +185,7 @@ def peliculas_pais(Pais: str):
 
     return f"Se produjeron {cantidad_peliculas} películas en el país {Pais}."
 
+print(peliculas_pais('Esta'))
 
 
 
