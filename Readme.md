@@ -49,3 +49,7 @@ Parámetros:
 titulo: El título de la película para la cual deseas obtener recomendaciones.
 Ejemplo de uso: https://movies-repository.onrender.com/recomendacion/Toy Story
 Copy code
+
+## Links de los entregables
+
+- \*_Link del Deploy con Render/[';-_:

@@ -178,7 +178,7 @@ def peliculas_pais(Pais: str):
     pais_limpiado = Pais.lower().strip()
 
     # Filtra el DataFrame por el país ingresado
-    peliculas_por_pais = movies[movies['production_countries'].str.contains(pais_limpiado, case=False)]
+    peliculas_por_pais = movies[movies['production_companies'].str.contains(pais_limpiado, case=False)]
 
     # Obtiene la cantidad de películas producidas en el país
     cantidad_peliculas = len(peliculas_por_pais)
