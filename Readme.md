@@ -28,26 +28,78 @@ Este comando instalará automáticamente todas las bibliotecas necesarias en tu 
 
 Si aún no tienes Python instalado, puedes descargarlo e instalarlo desde el sitio oficial de Python: https://www.python.org.
 
-Guía de Uso de las APIs
-A continuación se detallan las diferentes APIs disponibles en el proyecto y có
+### API: `peliculas_idioma`
 
-Ejemplo de uso: https://movies-repository.onrender.com/productoras_exitosas/Pixar Animation Studios
-API: get_director
+Esta API devuelve la cantidad de películas en el idioma especificado.
+
+- **URL**: `https://movies-repository.onrender.com/peliculas_idioma/{idioma}`
+- **Método**: GET
+- **Parámetros**:
+  - `idioma`: El idioma de la cantidad de películas que deseas obtener.
+- **Ejemplo de uso**: `https://movies-repository.onrender.com/peliculas_idioma/en`
+
+### API: `peliculas_duracion`
+
+Esta API devuelve el nombre, su duración en minutos y el año de estreno de una película específica.
+
+- **URL**: `https://movies-repository.onrender.com/peliculas_duracion/{pelicula}`
+- **Método**: GET
+- **Parámetros**:
+  - `pelicula`: El nombre de la película para la cual deseas obtener la duración.
+- **Ejemplo de uso**: `https://movies-repository.onrender.com/peliculas_duracion/Jumanji`
+
+### API: `franquicia`
+
+Esta API devuelve información sobre una franquicia de películas, su nombre, cantidad de películas, ganancias totales y ganancias promedio.
+
+- **URL**: `https://movies-repository.onrender.com/franquicia/{franquicia}`
+- **Método**: GET
+- **Parámetros**:
+  - `franquicia`: El nombre de la franquicia de películas que deseas obtener información. Todas estas franquicias terminan con **Collection**.
+- **Ejemplo de uso**: `https://movies-repository.onrender.com/franquicia/Toy Story Collection`
+
+### API: `peliculas_pais`
+
+Esta API devuelve la cantidad de películas producidas en el pais especificado.
+
+- **URL**: `https://movies-repository.onrender.com/peliculas_pais/{pais}`
+- **Método**: GET
+- **Parámetros**:
+  - `pais`: El nombre del país para el cual deseas obtener la cantidad de películas producidas.
+- **Ejemplo de uso**: `https://movies-repository.onrender.com/peliculas_pais/United States of America`
+
+### API: `productoras_exitosas`
+
+Esta API devuelve información sobre una productora, su nombre, ganancias totales y la cantidad de peliculas producidas.
+
+- **URL**: `https://movies-repository.onrender.com/productoras_exitosas/{productora}`
+- **Método**: GET
+- **Parámetros**:
+  - `productora`: El nombre de la productora de películas que deseas obtener información.
+- **Ejemplo de uso**: `https://movies-repository.onrender.com/productoras_exitosas/Pixar Animation Studios`
+
+### API: `get_director`
+
 Esta API devuelve información sobre un director de películas, su nombre, el retorno total en sus peliculas y un diccionario con informacion de sus peliculas.
 
-URL: https://movies-repository.onrender.com/get_director/{nombre_director}
-Método: GET
-Parámetros:
-nombre_director: El nombre del director que deseas obtener información.
-Ejemplo de uso: https://movies-repository.onrender.com/get_director/Steven Spielberg
-API: recomendacion
+- **URL**: `https://movies-repository.onrender.com/get_director/{nombre_director}`
+- **Método**: GET
+- **Parámetros**:
+  - `nombre_director`: El nombre del director que deseas obtener información.
+- **Ejemplo de uso**: `https://movies-repository.onrender.com/get_director/Steven Spielberg`
+
+### API: `recomendacion`
+
 Esta API devuelve una lista de 5 películas similares al título especificado, en forma de recomendación.
 
-URL: https://movies-repository.onrender.com/recomendacion/{titulo}
-Método: GET
-Parámetros:
-titulo: El título de la película para la cual deseas obtener recomendaciones.
-Ejemplo de uso: https://movies-repository.onrender.com/recomendacion/Toy Story
+- **URL**: `https://movies-repository.onrender.com/recomendacion/{titulo}`
+- **Método**: GET
+- **Parámetros**:
+  - `titulo`: El título de la película para la cual deseas obtener recomendaciones.
+- **Ejemplo de uso**: `https://movies-repository.onrender.com/recomendacion/Toy Story`
+
+---
+
 Copy code
 
 ## Links de los entregables
